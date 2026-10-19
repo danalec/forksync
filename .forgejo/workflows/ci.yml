@@ -1,0 +1,65 @@
+---
+name: CI
+
+# The GitHub-side workflow (.github/workflows/ci.yml) asks for ubuntu-24.04,
+# windows-2022 and macos-15, because that is what GitHub's runners are
+# called. This instance has one act_runner, labelled ubuntu-latest, so
+# every one of those jobs sat at "Waiting to run" forever — the same thing
+# happens to rgx on this instance.
+#
+# So the Forgejo side gets its own workflow, on the label that exists here.
+# The GitHub workflow is skipped on this host by its server_url guard.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Test
+        run: python -m unittest discover -s tests -v
+
+      - name: Build
+        run: python -m pip wheel . --no-deps -w dist
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install ruff
+        run: python -m pip install ruff
+
+      - name: Lint
+        run: ruff check src tests

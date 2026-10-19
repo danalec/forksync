@@ -16,6 +16,11 @@ permissions:
 jobs:
   test:
     name: python ${{ matrix.python }} on ${{ matrix.os }}
+    # This instance also reads .github/workflows/, but its only runner is
+    # labelled ubuntu-latest, so every matrix job here would sit at
+    # "Waiting to run" forever. The Forgejo side has its own workflow in
+    # .forgejo/workflows/ci.yml, on the label that exists here.
+    if: github.server_url == 'https://github.com'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -44,6 +49,7 @@ jobs:
 
   lint:
     name: ruff
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
