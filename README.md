@@ -138,6 +138,20 @@ this repo.
 The workflow lives under `.forgejo/` on purpose. GitHub only reads
 `.github/workflows/`, so the mirror cannot bounce back and retrigger itself.
 
+`GH_TOKEN` currently holds the personal OAuth token from `gh auth login`,
+which carries more scope than this mirror needs. A fine-grained PAT limited
+to this one repository, with `contents: write` and nothing else, would be
+tighter; it is a change in the GitHub token, not in the workflow.
+
+### The CI on both hosts
+
+`.github/workflows/ci.yml` runs the tests and ruff on Linux, Windows and
+macOS. `.forgejo/workflows/ci.yml` runs the same thing on the Forgejo
+instance, which has a single runner and a different Python setup; the
+GitHub-side workflow is skipped there by a `server_url` guard, so the two do
+not both run.
+
+
 
 ## License
 
