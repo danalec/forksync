@@ -9,8 +9,9 @@ name: CI
 #
 # The runner's image is node:20-bookworm, and actions/setup-python@v5 cannot
 # find a build for it: "The version '3.12' with architecture 'x64' was not
-# found for this operating system". So this workflow uses the Python the
-# image already carries, and says which one it is.
+# found for this operating system". The image does carry Python 3.11, but
+# Debian strips ensurepip's bundled wheels, so it has no pip either. This
+# workflow therefore uses the image's own Python and installs pip for it.
 #
 # The GitHub workflow is skipped on this host by its server_url guard, so the
 # two do not both run.
@@ -34,13 +35,13 @@ jobs:
       - name: Set up Python
         run: |
           set -euo pipefail
-          if ! command -v python3 >/dev/null 2>&1; then
-            echo "::notice::no python3 in the runner image; installing it"
+          if ! command -v python3 >/dev/null 2>&1 || ! python3 -m pip --version >/dev/null 2>&1; then
+            echo "::notice::the runner image has no usable pip; installing python3-pip"
             apt-get update -qq
             apt-get install -y -qq python3 python3-pip
           fi
           echo "runner python: $(python3 --version 2>&1)"
-          python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+          python3 -m pip --version
           python3 -m pip install --upgrade pip setuptools wheel
           # Debian marks its python as externally managed, and the container
           # is disposable, so installing into it is fine.
@@ -62,11 +63,10 @@ jobs:
       - name: Install ruff
         run: |
           set -euo pipefail
-          if ! command -v python3 >/dev/null 2>&1; then
+          if ! command -v python3 >/dev/null 2>&1 || ! python3 -m pip --version >/dev/null 2>&1; then
             apt-get update -qq
             apt-get install -y -qq python3 python3-pip
           fi
-          python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
           python3 -m pip install --upgrade pip
           python3 -m pip install --break-system-packages ruff || python3 -m pip install ruff
 
