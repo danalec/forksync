@@ -124,7 +124,20 @@ inferred from commit counts.
 | [`src/forksync/cli.py`](src/forksync/cli.py) | `check`, `report`, `sync` |
 | [`tests/test_forksync.py`](tests/test_forksync.py) | The classification tests — the decision that decides whether a repository gets rewritten |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Tests and lint on Linux, Windows and macOS |
+| [`.forgejo/workflows/sync-to-github.yml`](.forgejo/workflows/sync-to-github.yml) | Mirrors a push on Forgejo to GitHub |
 | [`COPYING`](COPYING) | The MIT / Apache-2.0 split and the commercial-use terms |
+
+### The mirror
+
+Forgejo is the canonical remote; GitHub is a mirror of it. A push to
+`forgejo/main` is mirrored to `github.com/danalec/forksync` by
+`.forgejo/workflows/sync-to-github.yml`, which needs a `GH_TOKEN` Actions
+secret on the Forgejo repository — a GitHub token with `contents: write` on
+this repo.
+
+The workflow lives under `.forgejo/` on purpose. GitHub only reads
+`.github/workflows/`, so the mirror cannot bounce back and retrigger itself.
+
 
 ## License
 

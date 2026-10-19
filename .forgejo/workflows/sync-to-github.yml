@@ -1,0 +1,84 @@
+---
+name: Sync to GitHub
+
+# Forgejo is the canonical remote for this repository — the branch tracks
+# forgejo/main, the way rgx, rgy and spdr do. GitHub is a mirror.
+#
+# This file lives under .forgejo/ on purpose. GitHub only reads
+# .github/workflows/, so a push that lands here cannot bounce back and
+# retrigger the mirror. Moving the file to .github/ would close that loop.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-to-github
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    # No container: actions/checkout needs node, and the yoko workflows in
+    # this instance fail in a container for exactly that reason.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror the branch to GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          MIRROR_REPO: danalec/forksync
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::secrets.GH_TOKEN is not set on this repository"
+            exit 1
+          fi
+
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          BRANCH="${GITHUB_REF_NAME:-main}"
+          echo "mirroring ${SOURCE_SHA} (${BRANCH}) to ${MIRROR_REPO}"
+
+          git remote add github "https://x-access-token:${GH_TOKEN}@github.com/${MIRROR_REPO}.git"
+
+          # What GitHub has right now, if anything.
+          if git ls-remote --exit-code --heads github "${BRANCH}" >/dev/null 2>&1; then
+            TARGET_SHA="$(git ls-remote --heads github "${BRANCH}" | cut -f1)"
+          else
+            TARGET_SHA=""
+          fi
+
+          if [ "${TARGET_SHA}" = "${SOURCE_SHA}" ]; then
+            echo "github/${BRANCH} is already at ${SOURCE_SHA}; nothing to do"
+            exit 0
+          fi
+
+          git fetch github "${BRANCH}:refs/remotes/github/${BRANCH}" 2>/dev/null || true
+
+          if [ -n "${TARGET_SHA}" ] && git merge-base --is-ancestor "${TARGET_SHA}" "${SOURCE_SHA}"; then
+            echo "github/${BRANCH} is behind; fast-forwarding"
+            git push github "HEAD:refs/heads/${BRANCH}"
+          else
+            # Forgejo is canonical, so a diverged mirror is overwritten — but
+            # only if GitHub is still where we last saw it. --force-with-lease
+            # refuses if someone pushed to GitHub in the meantime.
+            if [ -z "${TARGET_SHA}" ]; then
+              echo "github/${BRANCH} does not exist; creating it"
+              git push github "HEAD:refs/heads/${BRANCH}"
+            else
+              echo "github/${BRANCH} diverged (${TARGET_SHA}); overwriting with --force-with-lease"
+              git push --force-with-lease="refs/heads/${BRANCH}:${TARGET_SHA}" \
+                github "HEAD:refs/heads/${BRANCH}"
+            fi
+          fi
+
+          git remote remove github
+          echo "done"
