@@ -24,6 +24,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Debian marks its python as externally managed (PEP 668). The container is
+  # disposable, so installing into it is fine; this is what lets pip do it.
+  PIP_BREAK_SYSTEM_PACKAGES: "1"
+
 jobs:
   test:
     name: test
@@ -43,9 +48,7 @@ jobs:
           echo "runner python: $(python3 --version 2>&1)"
           python3 -m pip --version
           python3 -m pip install --upgrade pip setuptools wheel
-          # Debian marks its python as externally managed, and the container
-          # is disposable, so installing into it is fine.
-          python3 -m pip install --break-system-packages . || python3 -m pip install .
+          python3 -m pip install .
 
       - name: Test
         run: python3 -m unittest discover -s tests -v
@@ -68,7 +71,7 @@ jobs:
             apt-get install -y -qq python3 python3-pip
           fi
           python3 -m pip install --upgrade pip
-          python3 -m pip install --break-system-packages ruff || python3 -m pip install ruff
+          python3 -m pip install ruff
 
       - name: Lint
         run: python3 -m ruff check src tests
