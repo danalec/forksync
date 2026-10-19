@@ -3,12 +3,17 @@ name: CI
 
 # The GitHub-side workflow (.github/workflows/ci.yml) asks for ubuntu-24.04,
 # windows-2022 and macos-15, because that is what GitHub's runners are
-# called. This instance has one act_runner, labelled ubuntu-latest, so
-# every one of those jobs sat at "Waiting to run" forever — the same thing
-# happens to rgx on this instance.
+# called. This instance has one act_runner, labelled ubuntu-latest, so every
+# one of those jobs sat at "Waiting to run" forever — the same thing happens
+# to rgx on this instance.
 #
-# So the Forgejo side gets its own workflow, on the label that exists here.
-# The GitHub workflow is skipped on this host by its server_url guard.
+# The runner's image is node:20-bookworm, and actions/setup-python@v5 cannot
+# find a build for it: "The version '3.12' with architecture 'x64' was not
+# found for this operating system". So this workflow uses the Python the
+# image already carries, and says which one it is.
+#
+# The GitHub workflow is skipped on this host by its server_url guard, so the
+# two do not both run.
 
 on:
   push:
@@ -20,31 +25,32 @@ permissions:
 
 jobs:
   test:
-    name: python ${{ matrix.python }}
+    name: test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["3.9", "3.12", "3.13"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install .
+          set -euo pipefail
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "::notice::no python3 in the runner image; installing it"
+            apt-get update -qq
+            apt-get install -y -qq python3 python3-pip
+          fi
+          echo "runner python: $(python3 --version 2>&1)"
+          python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+          python3 -m pip install --upgrade pip setuptools wheel
+          # Debian marks its python as externally managed, and the container
+          # is disposable, so installing into it is fine.
+          python3 -m pip install --break-system-packages . || python3 -m pip install .
 
       - name: Test
-        run: python -m unittest discover -s tests -v
+        run: python3 -m unittest discover -s tests -v
 
       - name: Build
-        run: python -m pip wheel . --no-deps -w dist
+        run: python3 -m pip wheel . --no-deps -w dist
 
   lint:
     name: ruff
@@ -53,13 +59,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
       - name: Install ruff
-        run: python -m pip install ruff
+        run: |
+          set -euo pipefail
+          if ! command -v python3 >/dev/null 2>&1; then
+            apt-get update -qq
+            apt-get install -y -qq python3 python3-pip
+          fi
+          python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --break-system-packages ruff || python3 -m pip install ruff
 
       - name: Lint
-        run: ruff check src tests
+        run: python3 -m ruff check src tests
