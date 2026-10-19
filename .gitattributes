@@ -1,0 +1,4 @@
+# Line-ending policy: pin LF in the repository and in the working tree so a
+# diff is always about the change and never about the line endings.
+# core.autocrlf is true on the authoring machine.
+* text=auto eol=lf

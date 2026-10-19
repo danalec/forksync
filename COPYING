@@ -1,0 +1,47 @@
+Licensing
+=========
+
+forksync is dual-licensed under the MIT License and the Apache License 2.0.
+You may use it under the terms of either license.
+
+Every source file in this repository carries the header
+
+    SPDX-License-Identifier: MIT OR Apache-2.0
+
+and there is no split in the code: unlike `rgx` and `posix7`, forksync has no
+Apache-2.0-only subsystem, so the SPDX header is the same on every file and
+the split is not something a reader has to reconstruct from a file list.
+
+The MIT and Apache-2.0 option
+-----------------------------
+
+You may use this software under the terms of the MIT License, or under the
+terms of the Apache License 2.0, at your option.
+
+Apache-2.0 was chosen as the license this project intends for commercial
+deployment: it carries an express patent grant and an explicit limitation of
+liability, which a tool that rewrites your own GitHub repositories is better
+off having. The MIT option remains available to anyone who prefers its terms,
+and nothing here requires you to take the Apache-2.0 option.
+
+Commercial use
+--------------
+
+Commercial use is licensed under Apache-2.0, which is the license this project
+intends for commercial deployment. For commercial licensing terms and rates, or
+to license forksync in a way this repository does not already grant, contact:
+
+    Dan Alec Yamaguchi
+    Email: danalec@gmail.com
+    ORCID: 0009-0002-9725-7779
+
+Full texts: LICENSE-MIT and LICENSE-APACHE. Third-party notices: NOTICE.
+
+What this tool does and does not grant
+--------------------------------------
+
+forksync drives the GitHub CLI (`gh`) against repositories you already have
+access to. It creates no account, sends no message, and opens no pull request
+by itself. Using it against a repository you do not own requires the
+permissions `gh` already holds; nothing here grants access you did not
+already have.

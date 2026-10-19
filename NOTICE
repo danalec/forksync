@@ -1,0 +1,22 @@
+forksync — Notices
+==================
+
+Copyright 2026 Dan Alec Yamaguchi.
+
+This product is dual-licensed under the MIT License and the Apache License
+2.0. See LICENSE-MIT, LICENSE-APACHE and COPYING.
+
+Third-party components
+----------------------
+This project has no runtime dependencies and vendors no third-party code.
+Every file under src/ was written for this repository.
+
+forksync drives the GitHub CLI (https://cli.github.com/), which is a separate
+program under its own license. forksync links no part of it: it is invoked as
+a subprocess and the CLI is not redistributed here. The same is true of the
+Python interpreter it runs on, under the Python Software Foundation License.
+
+Names
+-----
+"GitHub" and "GitHub CLI" are names of their respective projects. References
+to them here are nominative and do not imply affiliation.
