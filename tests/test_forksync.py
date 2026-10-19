@@ -13,13 +13,13 @@ from forksync import audit, report
 
 
 def state(**kwargs) -> audit.ForkState:
-    base = dict(
-        name="example",
-        fork_owner="danalec",
-        fork_name="example",
-        upstream="someone/example",
-        branch="main",
-    )
+    base = {
+        "name": "example",
+        "fork_owner": "danalec",
+        "fork_name": "example",
+        "upstream": "someone/example",
+        "branch": "main",
+    }
     base.update(kwargs)
     return audit.ForkState(**base)
 

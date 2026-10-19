@@ -82,7 +82,7 @@ class Audit:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Audit":
+    def from_dict(cls, data: dict) -> Audit:
         audit = cls(owner=data["owner"])
         for item in data.get("forks", []):
             audit.forks.append(

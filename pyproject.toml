@@ -28,3 +28,13 @@ Source = "https://github.com/danalec/forksync"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# An explicit list, so the lint outcome does not change when ruff changes its
+# defaults. CI installs the newest ruff; without this the build would break on
+# a release that adds a rule.
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]

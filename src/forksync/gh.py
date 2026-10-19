@@ -82,6 +82,7 @@ def _run_once(args: list[str], timeout: int) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
         timeout=timeout,
+        check=False,
     )
 
 
